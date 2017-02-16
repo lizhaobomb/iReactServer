@@ -9,6 +9,10 @@ var UserSchema = new mongoose.Schema({
 	},
 	areaCode: String,
 	verifyCode: String,
+	verified: {
+		type: Boolean,
+		default: false
+	},
 	accessToken: String,
 	nickname: String,
 	gender: String,
