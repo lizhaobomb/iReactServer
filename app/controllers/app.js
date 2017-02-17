@@ -2,11 +2,33 @@
 
 var mongoose = require('mongoose')
 var session = require('koa-session')
+var uuid = require('uuid')
 var User = mongoose.model('User')
+var robot = require('../services/robot')
 
 exports.signature = function *(next) {
-	this.body = {
-		success: true
+
+var body = this.request.body
+var cloud = body.cloud
+var token
+var key 
+
+if (cloud === 'qiniu') {
+	key = uuid.v4() + '.png'
+	var token = robot.getQiniuToken(key)
+}
+else {
+	token = robot.getCloudinaryToken(body)
+}
+
+this.body = {
+		success: true,
+		data: 
+			{
+				token: token,
+				key: key
+			}
+				
 	}
 }
 
