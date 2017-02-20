@@ -15,7 +15,9 @@ var key
 
 if (cloud === 'qiniu') {
 	key = uuid.v4() + '.png'
-	var token = robot.getQiniuToken(key)
+	var data = robot.getQiniuToken(body)
+	token = data.token
+	key = data.key
 }
 else {
 	token = robot.getCloudinaryToken(body)
