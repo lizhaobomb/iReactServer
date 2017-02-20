@@ -23,7 +23,7 @@ exports.getQiniuToken = function(body) {
 	else if(type === 'video') {
 		key += '.mp4'
 		options.scope = 'baobaovideo:' + key
-		options.presistentOps = 'avthumb/mp4/an/1'
+		options.persistentOps = 'avthumb/mp4/an/1' 
 		putPolicy = new qiniu.rs.PutPolicy2(options)
 	} 
 	else if(type === 'audio') {
