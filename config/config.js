@@ -2,6 +2,7 @@
 
 module.exports = {
 	qiniu: {
+		video: 'http://olo1wj1st.bkt.clouddn.com/',
 		AK: 'sRwVOBKQoURAI0YOwLOQzsIR18RA8Ey3gcS8B8vP',
 		SK: 'MIYfpqaoplhhe1PbaCEW_hvRyGcmKOeLzCQZ7yOI'
 	},

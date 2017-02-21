@@ -3,6 +3,8 @@
 var Router = require('koa-router')
 var User = require('../app/controllers/user')
 var App = require('../app/controllers/app')
+var Creation = require('../app/controllers/creation')
+
 
 module.exports = function(){
 	var router = new Router({
@@ -16,6 +18,9 @@ module.exports = function(){
 
 	//app
 	router.post('/signature',App.hasBody, App.hasToken, App.signature)
+
+	router.post('/creations/video',App.hasBody, App.hasToken, Creation.video)
+
 
 	return router
 }

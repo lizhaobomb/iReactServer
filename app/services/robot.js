@@ -1,11 +1,17 @@
 'use strict'
 
 var qiniu = require('qiniu')
+var cloudinary = require('cloudinary')
 var sha1 = require('sha1')
 var config = require('../../config/config')
 var uuid = require('uuid')
+
+var Promise = require('bluebird')
+
 qiniu.conf.ACCESS_KEY = config.qiniu.AK
 qiniu.conf.SECRET_KEY = config.qiniu.SK
+
+cloudinary.config(config.cloudinary)
 
 exports.getQiniuToken = function(body) {
 	var type = body.type
@@ -15,8 +21,8 @@ exports.getQiniuToken = function(body) {
 		presistentNotifyUrl: config.notify
 	}
 	if (type === 'avatar') {
-  // putPolicy.callbackUrl = 'http://your.domain.com/callback'
-  // putPolicy.callbackBody = 'filename=$(fname)&filesize=$(fsize)'
+	// putPolicy.callbackUrl = 'http://your.domain.com/callback'
+	// putPolicy.callbackBody = 'filename=$(fname)&filesize=$(fsize)'
 		key += '.png'
 		putPolicy = new qiniu.rs.PutPolicy('avatar:' + key);
 	} 
@@ -47,19 +53,36 @@ exports.getCloudinaryToken = function(body) {
 		folder = 'avatar'
 		tags = 'app,avatar'
 	}
-else if (type === 'video') {
+	else if (type === 'video') {
 		folder = 'video'
 		tags = 'app,video'
 	}
-else if (type === 'audio') {
+	else if (type === 'audio') {
 		folder = 'audio'
 		tags = 'app,audio'
 	}
 
- var signature = 'folder=' + folder + '&tags=' + tags + 
- 	'&timestamp=' + timestamp + config.cloudinary.api_secret
+	var signature = 'folder=' + folder + '&tags=' + tags + 
+		'&timestamp=' + timestamp + config.cloudinary.api_secret
 
 	signature = sha1(signature)
 	return signature
+}
+
+exports.uploadToCloudinary = function(url) {
+	return new Promise(function(resolve, reject) {
+		cloudinary.uploader.upload(url, function(result) {
+			console.log(result)
+				if (result && result.public_id) {
+					resolve(result)
+				}
+				else {
+					reject(result)
+				}
+		}, {
+				resource_type: 'video',
+				folder: 'video'
+			})
+	})
 }
 

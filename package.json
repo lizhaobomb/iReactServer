@@ -10,6 +10,7 @@
   "license": "MIT",
   "dependencies": {
     "bluebird": "^3.4.7",
+    "cloudinary": "^1.7.0",
     "i": "^0.3.5",
     "koa": "^1.2.5",
     "koa-bodyparser": "^2.3.0",
