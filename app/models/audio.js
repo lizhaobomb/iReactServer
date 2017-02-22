@@ -16,6 +16,9 @@ var AudioSchema = new Schema({
 	},
 
 	public_id: String,
+	qiniu_video: String,
+	qiniu_thumb: String,
+
 	detail: Mixed,
 	
 	meta:{

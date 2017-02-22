@@ -13,6 +13,21 @@ qiniu.conf.SECRET_KEY = config.qiniu.SK
 
 cloudinary.config(config.cloudinary)
 
+exports.saveToQiniu = function(url, key) {
+	var client = new qiniu.rs.Client()
+
+	return new Promise(function(resolve, reject){
+		client.fetch(url, 'baobaovideo', key, function(error,result){
+			if (error) {
+				reject(error)
+			} 
+			else {
+				resolve(result)
+			}
+		})
+	})
+}
+
 exports.getQiniuToken = function(body) {
 	var type = body.type
 	var putPolicy
