@@ -10,27 +10,17 @@ exports.signature = function *(next) {
 
 var body = this.request.body
 var cloud = body.cloud
-var token
-var key 
-
+var data
 if (cloud === 'qiniu') {
-	key = uuid.v4() + '.png'
-	var data = robot.getQiniuToken(body)
-	token = data.token
-	key = data.key
+	data = robot.getQiniuToken(body)
 }
 else {
-	token = robot.getCloudinaryToken(body)
+	data = robot.getCloudinaryToken(body)
 }
 
 this.body = {
 		success: true,
-		data: 
-			{
-				token: token,
-				key: key
-			}
-				
+		data: data
 	}
 }
 
