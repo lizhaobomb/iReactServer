@@ -3,10 +3,16 @@
 var mongoose = require('mongoose')
 var session = require('koa-session')
 var Promise = require('bluebird')
+var xss = require('xss')
+var _ = require('lodash')
+
 var robot = require('../services/robot')
 var config = require('../../config/config')
+
 var Video = mongoose.model('Video')
 var Audio = mongoose.model('Audio')
+var Creation = mongoose.model('Creation')
+
 
 function asyncMedia(videoId, audioId) {
 	console.log(videoId)
@@ -83,6 +89,157 @@ function asyncMedia(videoId, audioId) {
 		})
 	})
 
+}
+
+
+exports.up = function *(next) {
+  var body = this.request.body
+  var user = this.session.user
+  var creation = yield Creation.findOne({
+    _id: body.id
+  })
+  .exec()
+
+  if (!creation) {
+    this.body = {
+      success: false,
+      err: '视频找不到了！'
+    }
+
+    return next
+  }
+
+  if (body.up === 'yes') {
+    creation.votes.push(String(user._id))
+  }
+  else {
+    creation.votes = _.without(creation.votes, String(user._id))
+  }
+
+  creation.up = creation.votes.length
+
+  yield creation.save()
+
+  this.body = {
+    success: true
+  }
+}
+
+var userFields = [
+  'avatar',
+  'nickname',
+  'gender',
+  'age',
+  'breed'
+]
+
+exports.find = function *(next) {
+  var page = parseInt(this.query.page, 10) || 1
+  var count = 5
+  var offset = (page - 1) * count
+  var queryArray = [
+    Creation
+      .find({finish: 100})
+      .sort({
+        'meta.createAt': -1
+      })
+      .skip(offset)
+      .limit(count)
+      .populate('author', userFields.join(' '))
+      .exec(),
+    Creation.count({finish: 100}).exec()
+  ]
+
+  var data = yield queryArray
+
+  this.body = {
+    success: true,
+    data: data[0],
+    total: data[1]
+  }
+}
+
+exports.save = function *(next) {
+	var body = this.request.body
+	var videoId = body.videoId
+	var audioId = body.audioId
+	var title = body.title
+	var user = this.session.user
+
+	var video = yield Video.findOne({
+		_id: videoId
+	}).exec()
+
+	var audio = yield Audio.findOne({
+		_id: audioId
+	}).exec()
+
+	if (!video || !audio) {
+		this.body = {
+			success: false,
+			err: '音频或视频不能为空'
+		}
+		return next
+	}
+
+	var creation = yield Creation.findOne({
+		audio: audioId,
+		video: videoId
+	}).exec()
+
+	if (!creation) {
+		var creationData = {
+			author: user._id,
+			title: xss(title),
+			audio: audioId,
+			video: videoId,
+			finish: 20
+		}
+
+		var video_public_id = video.public_id
+		var audio_public_id = audio.public_id
+
+		if (video_public_id && audio_public_id) {
+			creationData.cloudinary_thumb = 'http://res.cloudinary.com/lizhao/video/upload/' + video_public_id + '.jpg'
+			creationData.cloudinary_video = 'http://res.cloudinary.com/lizhao/video/upload/e_volume:-100/e_volume:400,l_video:' 
+			+ audio_public_id.replace(/\//g, ':') + '/' + video_public_id + '.mp4'
+			creationData.finish += 20
+		}
+
+		if (audio.qiniu_thumb) {
+			creationData.qiniu_thumb = audio.qiniu_thumb
+			creationData.finish += 30
+		}
+
+		if (audio.qiniu_video) {
+			creationData.qiniu_video = audio.qiniu_video
+			creationData.finish += 30
+		}
+
+		creation = new Creation(creationData)
+	}
+
+	creation = yield creation.save()
+	
+	console.log(creation)
+
+	this.body = {
+		success: true,
+		data: {
+			_id: creation._id,
+			finish: creation.finish,
+			title: creation.title,
+			qiniu_thumb: creation.qiniu_thumb,
+			qiniu_video: creation.qiniu_video,
+			author: {
+				avatar: user.avatar,
+				nickname: user.nickname,
+				gender: user.gender,
+				breed: user.breed,
+				_id: user._id
+			}
+		}
+	}
 }
 
 exports.audio = function *(next) {
