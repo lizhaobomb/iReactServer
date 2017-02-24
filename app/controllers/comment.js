@@ -1,9 +1,8 @@
 'use strict'
 
-var mongoose = require('mongoose')
+var mongoose = require('mongoose').set('debug',true)
 var Comment = mongoose.model('Comment')
 var Creation = mongoose.model('Creation')
-
 var userFields = [
   'avatar',
   'nickname',
@@ -46,7 +45,7 @@ exports.find = function *(next) {
 }
 
 exports.save = function *(next) {
-  var commentData = this.request.body.comment
+  var commentData = this.request.body
   var user = this.session.user
   var creation = yield Creation.findOne({
     _id: commentData.creation
@@ -65,7 +64,7 @@ exports.save = function *(next) {
   var comment
 
   if (commentData.cid) {
-    comment = yield Comment.findOne({
+    comment = yield Comment.find({
       _id: commentData.cid
     })
     .exec()
